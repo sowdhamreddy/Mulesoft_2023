@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b8fd5826-6fdb-4ead-a251-57c89ebefcff" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="for-eachFlow" doc:id="3bb483d3-2357-4731-a037-ecc0803a2363" >
+		<http:listener doc:name="Listener" doc:id="14e80859-6e14-4ed6-82cc-784eb523fdde" config-ref="HTTP_Listener_config" path="/for-each"/>
+		<ee:transform doc:name="Transform Message" doc:id="f42222c4-8652-4eef-bb68-8538f3d1f17c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[10,40,'k',40] as Array]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[[] as Array]" doc:name="Set Variable" doc:id="468d91e7-80be-4f2b-bdf7-0e21a3a91482" variableName="arr"/>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="e2ce92af-fc7d-48db-9cd3-b3cd93f33a87" collection="#[payload]">
+			<logger level="INFO" doc:name="Logger" doc:id="a669cd03-a33a-4ef1-a814-187401b761bb" message="jjj" />
+			<ee:transform doc:name="Transform Message" doc:id="3ce9bc24-2027-4b73-8663-adf028136c4b">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"number": payload - 100
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<set-variable value="#[%dw 2.0&#10;output application/json&#10;---&#10;vars.arr ++ [payload]]" doc:name="Set Variable" doc:id="d1d2f8b2-ac96-4ff8-ad2c-aa45cb4b8f41" variableName="arr" />
+		</parallel-foreach>
+		<set-payload value="#[%dw 2.0&#10;output application/json&#10;---&#10;payload]" doc:name="Set Payload" doc:id="bc3a64ea-14e1-4631-b3b0-bad4545fbec5" />
+	</flow>
+</mule>
