@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="b7963fd7-3409-4eff-b128-c8f744b55179" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="8b58fff8-87ae-4526-bcfe-31ef012a7b7e" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="admin" database="stored" />
+	</db:config>
+	<flow name="dbFlow" doc:id="796453ac-6a42-4997-831c-890c4f6b8ebd" >
+		<http:listener doc:name="Listener" doc:id="f72c00c6-e795-426f-b882-69b83166003e" config-ref="HTTP_Listener_config" path="/db"/>
+		<ee:transform doc:name="Transform Message" doc:id="83e1dd3a-b3be-4904-9670-54bbd9058e66" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+1 to 100 map{
+	"empid": 100 + $$,
+	"empname":"sowdham",
+	"emppage":234
+	}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<parallel-foreach doc:name="Parallel For Each" doc:id="69bf621a-da37-481b-ad5b-49d2ee894b1a" collection="#[payload]">
+			<db:insert doc:name="Insert" doc:id="e2f6fd4c-f893-4551-9e92-1385353ace8f" config-ref="Database_Config">
+				<db:sql><![CDATA[INSERT INTO persons (PersonID , LastName , FirstName , Address , City )
+VALUES (:empid, :emplname, :empfname, :empaddresss, :empcity);]]></db:sql>
+				<db:input-parameters><![CDATA[#[{
+	"empid": payload.empid,
+	"emplname": "reddy",
+	"empfname": payload.empname,
+	"empaddresss": payload.emppage,
+	"empcity": "kkd"
+}]]]></db:input-parameters>
+			</db:insert>
+		</parallel-foreach>
+		<ee:transform doc:name="Transform Message" doc:id="1e3cb10a-fc04-4686-bbad-875ab61ff68b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
